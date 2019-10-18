@@ -21,16 +21,17 @@ def isaac_taraxl_workspace():
     isaac_new_http_archive(
         name = "taraxl_aarch64_jetpack42",
         build_file = clean_dep("//third_party:taraxl_jetpack42.BUILD"),
-        sha256 = "de32a3ff38104c337c3df4a09626353e7c6ab92f7e7917c9e0e792a96ca75afa",
-        url = "https://www.dropbox.com/s/x7ygd1rdi3iaotz/taraxl_package.tar.xz?dl=1",
+        sha256 = "092f3f4ca8f9f5d06f98941e7adb1a7ea55feb4faa0d23462ad5fd88178145b0",
+        url = "https://www.dropbox.com/s/jifd1dqpu7vdeth/taraxl_package.tar.xz?dl=1",
         type = "tar.xz",
         licenses = [],
     )
     isaac_new_http_archive(
         name = "openni_dev_aarch64",
         build_file = clean_dep("//third_party:openni_dev.BUILD"),
-        sha256 = "abc489a1caed5bb413c02bd93f5b92de4980d38df96445f6f32ab56e9380c18e",
-        url = "https://www.dropbox.com/s/iij8050oblesqfv/openni_dev.tar.xz?dl=1",
+        sha256 = "e1ae942f98366cebbb1f80d131adf1e977f127fc9c7cdd61f01ec39fa1072ae2",
+        url = "https://www.dropbox.com/s/wbmcqf9l03tay78/openni_dev.tar.xz?dl=1",
         type = "tar.xz",
         licenses = [],
+
     )
