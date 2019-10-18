@@ -19,8 +19,13 @@ TaraXL is a CUDA accelarated SDK for TaraXL set of cameras.
 
 6. Go to your isaac directory and run the below commands to  run the samples:
    # cd <ISAAC Directory> 
+   For STEEReoCAM Camera(MIPI):
    #./engine/build/deploy.sh --remote_user nvidia -p //apps/samples/taraxl_camera:taraxl_camera-pkg -d jetpack42 -h <ROBOT IP>
    #./engine/build/deploy.sh --remote_user nvidia -p //apps/samples/taraxl_imu:taraxl_imu-pkg -d jetpack42 -h <ROBOT IP>
+   
+   For TaraXL Camera(USB)
+   #sudo ./engine/build/deploy.sh --remote_user nvidia -p //apps/samples/taraxl_camera:taraxl_camera-pkg -d jetpack42 -h <ROBOT IP>
+   #sudo ./engine/build/deploy.sh --remote_user nvidia -p //apps/samples/taraxl_imu:taraxl_imu-pkg -d jetpack42 -h <ROBOT IP>
 
 Now you can launch the application in the device/robot.
 
