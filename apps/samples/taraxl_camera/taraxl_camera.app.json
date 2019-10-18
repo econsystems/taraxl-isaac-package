@@ -1,0 +1,56 @@
+{
+  "name": "taraxl_camera",
+  "modules": [
+    "taraxl"
+  ],
+  "config": {
+    "taraxl": {
+      "isaac.TaraXLCameraDevice": {
+        "downscaled_resolution" :"",
+        "tick_period": "30Hz"
+      }
+    },
+    "websight": {
+      "WebsightServer": {
+        "port": 3000,
+        "ui_config": {
+          "windows": {
+            "Right Camera": {
+              "renderer": "2d",
+              "channels": [
+                {
+                  "name": "taraxl_camera/taraxl/isaac.TaraXLCameraDevice/right_image_thumbnail"
+                }
+              ]
+            },
+            "Left Camera": {
+              "renderer": "2d",
+              "channels": [
+                {
+                  "name": "taraxl_camera/taraxl/isaac.TaraXLCameraDevice/left_image_thumbnail"
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "graph": {
+    "nodes": [
+      {
+        "name": "taraxl",
+        "components": [
+          {
+            "name": "message_ledger",
+            "type": "isaac::alice::MessageLedger"
+          },
+          {
+            "name": "isaac.TaraXLCameraDevice",
+            "type": "isaac::TaraXLCameraDevice"
+          }
+        ]
+      }
+    ]
+  }
+}

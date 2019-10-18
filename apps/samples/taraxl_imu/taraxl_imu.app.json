@@ -1,0 +1,32 @@
+{
+  "name": "taraxl_imu",
+  "modules": [
+    "taraxl"
+  ],
+  "config": {
+    "taraxl": {
+      "isaac.TaraXLIMU": {
+        "device_id": 0,
+        "imu_frequency": "208Hz",
+        "tick_period" : "208Hz"
+      }
+    }
+  },
+  "graph": {
+    "nodes": [
+      {
+        "name": "taraxl",
+        "components": [
+          {
+            "name": "message_ledger",
+            "type": "isaac::alice::MessageLedger"
+          },
+          {
+            "name": "isaac.TaraXLIMU",
+            "type": "isaac::TaraXLIMU"
+          }
+        ]
+      }
+    ]
+  }
+}
