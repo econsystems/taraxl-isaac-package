@@ -1,12 +1,3 @@
-/*
-Copyright (c) 2018, NVIDIA CORPORATION. All rights reserved.
-
-NVIDIA CORPORATION and its licensors retain all intellectual property
-and proprietary rights in and to this software, related documentation
-and any modifications thereto. Any use, reproduction, disclosure or
-distribution of this software and related documentation without an express
-license agreement from NVIDIA CORPORATION is strictly prohibited.
-*/
 #include "TaraxlCamera.hpp"
 #include <algorithm>
 #include <utility>
@@ -180,7 +171,7 @@ void TaraXLCameraDevice::stop() {
 }
 Pose3d TaraXLCameraDevice::getCameraExtrinsics(cv::Mat rotation,cv::Mat translation) {
   Pose3d out;
-  double Q[4];
+
   Matrix3<double> rotationMatrix(reinterpret_cast<double*>(rotation.data));
 
   out.rotation = SO3<double>::FromQuaternion(Quaterniond(rotationMatrix));
