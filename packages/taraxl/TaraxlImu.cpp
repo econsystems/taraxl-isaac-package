@@ -83,5 +83,7 @@ void TaraXLIMU::tick() {
 
 void TaraXLIMU::stop() {
     selectedCam.disconnect();
+    if(taraxlPoseTracking != nullptr)
+          taraxlPoseTracking.reset(nullptr);
 }
 }  // namespace isaac
