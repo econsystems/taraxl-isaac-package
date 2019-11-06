@@ -103,6 +103,9 @@ class TaraXLCameraDevice : public alice::Codelet {
   // The numeral of the system video device of the TaraXL camera. For example for /dev/video0 choose 0.
   ISAAC_PARAM(int, device_id, 0);
 
+  //To allow codelet to publish raw/rectified frames.
+  ISAAC_PARAM(bool, publish_raw, false);
+
  private:
 
   // Publish the stereo data (images, camera intrinsics and extrinsics)
@@ -112,6 +115,9 @@ class TaraXLCameraDevice : public alice::Codelet {
   Pose3d getCameraExtrinsics(cv::Mat rotation,cv::Mat translation);
 
   void setResolutionCaller(TaraXLSDK::TaraXLNativeResolutions);
+
+  void SetCameraProtoParameters(const TaraXLSDK::CalibrationParams& in, ::ColorCameraProto::Builder& out);
+
 
   void getDownscaledWidthHeight(TaraXLSDK::TaraXLDownscaledResolutions selected_downscaled_resolution,int &downscaledCols,int &downscaledRows);
   // TaraXL camera data

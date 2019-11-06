@@ -21,8 +21,16 @@ namespace {
 // Factor by which to scale images down when displayed in Sight
 constexpr int kSightReduceSize = 1;
 
+
+
+// Gets a view on a TaraXL image
+ImageConstView1ub getIssacMat(const cv::Mat& mat) {
+  return CreateImageView<uint8_t, 1>(mat.ptr(), mat.rows, mat.cols);
+}
+
+}  // namespace
 // Helper function to copy camera intrinsics to ColorCameraProto
-void SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out) {
+void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out) {
   // Color space
   out.setColorSpace(ColorCameraProto::ColorSpace::GREYSCALE);
 
@@ -31,20 +39,22 @@ void SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::B
   ToProto(Vector2d(in.cameraMatrix.at<float>(0,0), in.cameraMatrix.at<float>(1,1)), pinhole.getFocal());
   ToProto(Vector2d(in.cameraMatrix.at<float>(0,2), in.cameraMatrix.at<float>(1,2)), pinhole.getCenter());
 
+  pinhole.setCols(selectedResolution.width);
+  pinhole.setRows(selectedResolution.height);
+
   // Distortion parameters
   auto distortion = out.initDistortion();
   distortion.setModel(DistortionProto::DistortionModel::BROWN);
-  // We have all zero distortion coefficients because we are retrieving rectified images
-  ToProto(Vector5f::Zero(), distortion.getCoefficients());
+
+  Vector5f dist;
+  dist[0] = in.distortionMatrix.at<float>(0);
+  dist[1] = in.distortionMatrix.at<float>(1);
+  dist[2] = in.distortionMatrix.at<float>(2);
+  dist[3] = in.distortionMatrix.at<float>(3);
+  dist[4] = in.distortionMatrix.at<float>(4);
+
+  ToProto(dist, distortion.getCoefficients());
 }
-
-// Gets a view on a TaraXL image
-ImageConstView1ub getIssacMat(const cv::Mat& mat) {
-  return CreateImageView<uint8_t, 1>(mat.ptr(), mat.rows, mat.cols);
-}
-
-}  // namespace
-
 void TaraXLCameraDevice::setResolutionCaller(TaraXLNativeResolutions nativeResolution)
 {
     TARAXL_STATUS_CODE status;
@@ -148,13 +158,30 @@ void TaraXLCameraDevice::tick() {
     TARAXL_STATUS_CODE status;
     std::string str;
     selectedCam.getFriendlyName(str);
-    status = selectedCam.grabFrame(left,right);
 
-    if (status != TARAXL_SUCCESS) {
 
-        reportFailure("grabFrame failed. Error code : %d\n", status);
-        return;
+    //Publish raw frames upon user selection.
+    if(get_publish_raw())
+    {
+        status = selectedCam.getUnrectifiedFrame(left,right);
+
+        if (status != TARAXL_SUCCESS) {
+
+            reportFailure("grabFrame failed. Error code : %d\n", status);
+            return;
+        }
     }
+    else
+    {
+        status = selectedCam.grabFrame(left,right);
+
+        if (status != TARAXL_SUCCESS) {
+
+            reportFailure("grabFrame failed. Error code : %d\n", status);
+            return;
+        }
+    }
+
 
     if(selected_native_resolution != get_native_resolution())
     {
@@ -339,15 +366,24 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
     auto r_camera = tx_rightImage().initProto();
 
     cv::Mat R,T;
-    CalibrationParams leftIntrinsics, rightIntrinsics;
+    CalibrationParams leftIntrinsics, rightIntrinsics, leftRectifiedIntrinsics, rightRectifiedIntrinsics;
     TARAXL_STATUS_CODE status;
 
 
-    status = selectedCam.getCalibrationParameters(R,T,leftIntrinsics,rightIntrinsics);
+    status = selectedCam.getCalibrationParameters(R,T,leftIntrinsics,rightIntrinsics,leftRectifiedIntrinsics, rightRectifiedIntrinsics);
 
 
-    SetCameraProtoParameters(leftIntrinsics, l_camera);
-    SetCameraProtoParameters(rightIntrinsics, r_camera);
+    //Publishing the intrinsics of raw frame dynamically by getting the state of publish_raw
+    if(get_publish_raw())
+    {
+        SetCameraProtoParameters(leftIntrinsics, l_camera);
+        SetCameraProtoParameters(rightIntrinsics, r_camera);
+    }
+    else
+    {
+        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera);
+        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera);
+    }
 
 
     if(selected_downscaled_resolution != get_downscaled_resolution())
