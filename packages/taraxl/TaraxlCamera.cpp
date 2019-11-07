@@ -22,7 +22,6 @@ namespace {
 constexpr int kSightReduceSize = 1;
 
 
-
 // Gets a view on a TaraXL image
 ImageConstView1ub getIssacMat(const cv::Mat& mat) {
   return CreateImageView<uint8_t, 1>(mat.ptr(), mat.rows, mat.cols);
@@ -30,14 +29,21 @@ ImageConstView1ub getIssacMat(const cv::Mat& mat) {
 
 }  // namespace
 // Helper function to copy camera intrinsics to ColorCameraProto
-void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out) {
+void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out, double scaleFactorX, double scaleFactorY) {
   // Color space
   out.setColorSpace(ColorCameraProto::ColorSpace::GREYSCALE);
 
   // Pinhole camera model parameters
   auto pinhole = out.initPinhole();
-  ToProto(Vector2d(in.cameraMatrix.at<float>(0,0), in.cameraMatrix.at<float>(1,1)), pinhole.getFocal());
-  ToProto(Vector2d(in.cameraMatrix.at<float>(0,2), in.cameraMatrix.at<float>(1,2)), pinhole.getCenter());
+
+  //Multiplying by a scale factor to be flesible to all the resolutions.
+  double fx = in.cameraMatrix.at<double>(0,0) * scaleFactorX;
+  double fy = in.cameraMatrix.at<double>(1,1) * scaleFactorY;
+  double cx = in.cameraMatrix.at<double>(0,2) * scaleFactorX;
+  double cy = in.cameraMatrix.at<double>(1,2) * scaleFactorY;
+
+  ToProto(Vector2d(fx,fy), pinhole.getFocal());
+  ToProto(Vector2d(cx,cy), pinhole.getCenter());
 
   pinhole.setCols(selectedResolution.width);
   pinhole.setRows(selectedResolution.height);
@@ -47,18 +53,17 @@ void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, :
   distortion.setModel(DistortionProto::DistortionModel::BROWN);
 
   Vector5f dist;
-  dist[0] = in.distortionMatrix.at<float>(0);
-  dist[1] = in.distortionMatrix.at<float>(1);
-  dist[2] = in.distortionMatrix.at<float>(2);
-  dist[3] = in.distortionMatrix.at<float>(3);
-  dist[4] = in.distortionMatrix.at<float>(4);
+  dist[0] = in.distortionMatrix.at<double>(0);
+  dist[1] = in.distortionMatrix.at<double>(1);
+  dist[2] = in.distortionMatrix.at<double>(2);
+  dist[3] = in.distortionMatrix.at<double>(3);
+  dist[4] = in.distortionMatrix.at<double>(4);
 
   ToProto(dist, distortion.getCoefficients());
 }
 void TaraXLCameraDevice::setResolutionCaller(TaraXLNativeResolutions nativeResolution)
 {
     TARAXL_STATUS_CODE status;
-    std::string cameraName;
     status = selectedCam.getFriendlyName(cameraName);
     if (status != TARAXL_SUCCESS) {
 
@@ -146,8 +151,13 @@ void TaraXLCameraDevice::start() {
   selected_native_resolution = get_native_resolution();
   selected_downscaled_resolution = get_downscaled_resolution();
 
-  getDownscaledWidthHeight(selected_downscaled_resolution,downscaledCols,downscaledRows);
   setResolutionCaller(selected_native_resolution);
+
+  downscaledRows = selectedResolution.height;
+  if(cameraName == TARAXL)
+      downscaledCols = selectedResolution.width;
+  else
+      downscaledCols = selectedResolution.width/2;
 
   tickPeriodically();
 }
@@ -370,26 +380,32 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
     TARAXL_STATUS_CODE status;
 
 
-    status = selectedCam.getCalibrationParameters(R,T,leftIntrinsics,rightIntrinsics,leftRectifiedIntrinsics, rightRectifiedIntrinsics);
-
-
-    //Publishing the intrinsics of raw frame dynamically by getting the state of publish_raw
-    if(get_publish_raw())
-    {
-        SetCameraProtoParameters(leftIntrinsics, l_camera);
-        SetCameraProtoParameters(rightIntrinsics, r_camera);
-    }
-    else
-    {
-        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera);
-        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera);
-    }
-
-
     if(selected_downscaled_resolution != get_downscaled_resolution())
     {
         selected_downscaled_resolution = get_downscaled_resolution();
         getDownscaledWidthHeight(selected_downscaled_resolution,downscaledCols,downscaledRows);
+    }
+
+    double scaleFactorX,scaleFactorY;
+
+    if(cameraName == TARAXL)
+        scaleFactorX = (double) downscaledCols / (double)(selectedResolution.width);
+    else
+        scaleFactorX = (double)downscaledCols / ((double)selectedResolution.width/2.0);
+    scaleFactorY = (double)downscaledRows / (double)selectedResolution.height;
+
+    status = selectedCam.getCalibrationParameters(R,T,leftIntrinsics,rightIntrinsics,leftRectifiedIntrinsics, rightRectifiedIntrinsics);
+
+    //Publishing the intrinsics of raw frame dynamically by getting the state of publish_raw
+    if(get_publish_raw())
+    {
+        SetCameraProtoParameters(leftIntrinsics, l_camera, scaleFactorX,scaleFactorY);
+        SetCameraProtoParameters(rightIntrinsics, r_camera, scaleFactorX,scaleFactorY);
+    }
+    else
+    {
+        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera, scaleFactorX,scaleFactorY);
+        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera, scaleFactorX,scaleFactorY);
     }
     //Left image
     Image1ub buffer_left_gray(left.rows, left.cols);

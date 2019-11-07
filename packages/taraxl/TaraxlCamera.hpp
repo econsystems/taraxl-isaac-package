@@ -116,7 +116,7 @@ class TaraXLCameraDevice : public alice::Codelet {
 
   void setResolutionCaller(TaraXLSDK::TaraXLNativeResolutions);
 
-  void SetCameraProtoParameters(const TaraXLSDK::CalibrationParams& in, ::ColorCameraProto::Builder& out);
+  void SetCameraProtoParameters(const TaraXLSDK::CalibrationParams& in, ::ColorCameraProto::Builder& out, double scaleFactorX, double scaleFactorY);
 
 
   void getDownscaledWidthHeight(TaraXLSDK::TaraXLDownscaledResolutions selected_downscaled_resolution,int &downscaledCols,int &downscaledRows);
@@ -126,6 +126,7 @@ class TaraXLCameraDevice : public alice::Codelet {
   TaraXLSDK::ResolutionList supportedResolutions;
   TaraXLSDK::Resolution selectedResolution;
   TaraXLSDK::TaraXLCamList taraxlCamList;
+  std::string cameraName;
   cv::Mat leftImage;
   cv::Mat rightImage;
   TaraXLSDK::TaraXLNativeResolutions selected_native_resolution;
