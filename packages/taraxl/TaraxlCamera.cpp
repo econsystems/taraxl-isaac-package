@@ -388,11 +388,18 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
 
     double scaleFactorX,scaleFactorY;
 
-    /*Why scaleFactorX is not divided by 2 for TaraXL USB? 
+    /*
+    1. Why scaleFactorX is not divided by 2 for TaraXL USB? 
     TARAXL camera image format is Y16.
     In one Y16 pixel, you get two Y8 pixels from left and right sensors. 
     We get 8 bit from each sensor. Combined both left and right image to get one Y16 pixel.  Splitting the images done in SDK.
-    That's is the reason we don't divide scaleFactorY by 2 for TaraXL Camera. 
+    That's is the reason we don't divide scaleFactorX by 2 for TaraXL Camera. 
+    For TaraXL, camera resolution will be 752x480 but the data will be 2x752x480
+    For steereocam cameras, we get side-by-side images of left and right sensor.  Camera resolution will be 3200x1300 but the data will be 2x1600x1300.
+    2. Why scaleFactorY is not divided by 2?
+    ScaleFactorY is height of the frame. It remains the same from actual resolution. It will not is divided by both for the both the cameras.
+    TaraXL Camera Resolution - 752x480 - ((2x752)x480)
+    SteereoCam Camera Resolution - 3200x1300 - ((2x1600)x1300)
     */
     if(cameraName == TARAXL)
         scaleFactorX = (double) downscaledCols / (double)(selectedResolution.width);
