@@ -388,7 +388,7 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
 
     double scaleFactorX,scaleFactorY;
 
-    /*Why scaleFactorY is not divided by 2 for TaraXL USB? 
+    /*Why scaleFactorX is not divided by 2 for TaraXL USB? 
     TARAXL camera image format is Y16.
     In one Y16 pixel, you get two Y8 pixels from left and right sensors. 
     We get 8 bit from each sensor. Combined both left and right image to get one Y16 pixel.  Splitting the images done in SDK.
