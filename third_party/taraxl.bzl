@@ -12,8 +12,8 @@ def isaac_taraxl_workspace():
     isaac_new_http_archive(
         name = "taraxl_aarch64_jetpack42",
         build_file = clean_dep("//third_party:taraxl_jetpack42.BUILD"),
-        sha256 = "38f69cc7259aa08ec3f4c89cba12c2dc9e325a291047925918df360ba8e9341b",
-        url = "https://www.dropbox.com/s/e6jndbfa5xrijb8/taraxl_package.tar.xz?dl=1",
+        sha256 = "465ad1bbe6a7629961de07f33939b008102d8db599dc13e0632b3f894472db08",
+        url = "https://www.dropbox.com/s/olerqmaculsm313/taraxl_package.tar.xz?dl=1",
         type = "tar.xz",
         licenses = [],
     )
