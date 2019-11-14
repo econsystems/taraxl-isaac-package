@@ -19,7 +19,7 @@ namespace isaac {
 namespace {
 
 // Factor by which to scale images down when displayed in Sight
-constexpr int kSightReduceSize = 1;
+constexpr int kSightReduceSize = 4;
 
 
 // Gets a view on a TaraXL image
