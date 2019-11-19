@@ -17,6 +17,7 @@ cc_library(
         "@com_nvidia_isaac//third_party:cuda",
         "@openni_dev_aarch64",
         "@opencv_dev_aarch64",
-        "@pcl_dev_aarch64"
+        "@pcl_dev_aarch64",
+        "@tbb_dev_aarch64"
     ],
 )

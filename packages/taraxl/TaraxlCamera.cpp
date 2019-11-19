@@ -29,7 +29,7 @@ ImageConstView1ub getIssacMat(const cv::Mat& mat) {
 
 }  // namespace
 // Helper function to copy camera intrinsics to ColorCameraProto
-void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out, double scaleFactorX, double scaleFactorY) {
+void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out, double scaleFactorX, double scaleFactorY,bool leftCamera) {
   // Color space
   out.setColorSpace(ColorCameraProto::ColorSpace::GREYSCALE);
 
@@ -60,6 +60,38 @@ void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, :
   dist[4] = in.distortionMatrix.at<double>(4);
 
   ToProto(dist, distortion.getCoefficients());
+
+
+
+
+  if(leftCamera)
+  {
+	  show("Intrinsic parameters.Left Camera Parameters.fx", fx);
+	  show("Intrinsic parameters.Left Camera Parameters.fy", fy);
+	  show("Intrinsic parameters.Left Camera Parameters.cx", cx);
+	  show("Intrinsic parameters.Left Camera Parameters.cy", cy);
+
+
+	  show("Intrinsic parameters.Left Distortion Coefficients.v", dist[0]);
+	  show("Intrinsic parameters.Left Distortion Coefficients.w", dist[1]);
+	  show("Intrinsic parameters.Left Distortion Coefficients.x", dist[2]);
+	  show("Intrinsic parameters.Left Distortion Coefficients.y", dist[3]);
+	  show("Intrinsic parameters.Left Distortion Coefficients.z", dist[4]);
+  }
+  else
+  {
+	  show("Intrinsic parameters.Right Camera Parameters.fx", fx);
+	  show("Intrinsic parameters.Right Camera Parameters.fy", fy);
+	  show("Intrinsic parameters.Right Camera Parameters.cx", cx);
+	  show("Intrinsic parameters.Right Camera Parameters.cy", cy);
+
+
+	  show("Intrinsic parameters.Right Distortion Coefficients.v", dist[0]);
+	  show("Intrinsic parameters.Right Distortion Coefficients.w", dist[1]);
+	  show("Intrinsic parameters.Right Distortion Coefficients.x", dist[2]);
+	  show("Intrinsic parameters.Right Distortion Coefficients.y", dist[3]);
+	  show("Intrinsic parameters.Right Distortion Coefficients.z", dist[4]);
+  }
 }
 void TaraXLCameraDevice::setResolutionCaller(TaraXLNativeResolutions nativeResolution)
 {
@@ -214,15 +246,15 @@ Pose3d TaraXLCameraDevice::getCameraExtrinsics(cv::Mat rotation,cv::Mat translat
   out.rotation = SO3<double>::FromQuaternion(Quaterniond(rotationMatrix));
   out.translation = Vector3d(translation.at<double>(0,0), translation.at<double>(1,0), translation.at<double>(2,0));
 
-  show("Extrinsic parameters Quaternion.w", out.rotation.quaternion().w());
-  show("Extrinsic parameters Quaternion.x", out.rotation.quaternion().x());
-  show("Extrinsic parameters Quaternion.y", out.rotation.quaternion().y());
-  show("Extrinsic parameters Quaternion.z", out.rotation.quaternion().z());
+  show("Extrinsic parameters.Rotation.w", out.rotation.quaternion().w());
+  show("Extrinsic parameters.Rotation.x", out.rotation.quaternion().x());
+  show("Extrinsic parameters.Rotation.y", out.rotation.quaternion().y());
+  show("Extrinsic parameters.Rotation.z", out.rotation.quaternion().z());
 
 
-  show("Extrinsic parameters Translation.x", out.translation.x());
-  show("Extrinsic parameters Translation.y", out.translation.y());
-  show("Extrinsic parameters Translation.z", out.translation.z());
+  show("Extrinsic parameters.Translation.x", out.translation.x());
+  show("Extrinsic parameters.Translation.y", out.translation.y());
+  show("Extrinsic parameters.Translation.z", out.translation.z());
 
 
   return out;
@@ -388,19 +420,6 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
 
     double scaleFactorX,scaleFactorY;
 
-    /*
-    1. Why scaleFactorX is not divided by 2 for TaraXL USB? 
-    TARAXL camera image format is Y16.
-    In one Y16 pixel, you get two Y8 pixels from left and right sensors. 
-    We get 8 bit from each sensor. Combined both left and right image to get one Y16 pixel.  Splitting the images done in SDK.
-    That's is the reason we don't divide scaleFactorX by 2 for TaraXL Camera. 
-    For TaraXL, camera resolution will be 752x480 but the data will be 2x752x480
-    For steereocam cameras, we get side-by-side images of left and right sensor.  Camera resolution will be 3200x1300 but the data will be 2x1600x1300.
-    2. Why scaleFactorY is not divided by 2?
-    ScaleFactorY is height of the frame. It remains the same from actual resolution. It will not is divided by both for the both the cameras.
-    TaraXL Camera Resolution - 752x480 - ((2x752)x480)
-    SteereoCam Camera Resolution - 3200x1300 - ((2x1600)x1300)
-    */
     if(cameraName == TARAXL)
         scaleFactorX = (double) downscaledCols / (double)(selectedResolution.width);
     else
@@ -412,13 +431,13 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
     //Publishing the intrinsics of raw frame dynamically by getting the state of publish_raw
     if(get_publish_raw())
     {
-        SetCameraProtoParameters(leftIntrinsics, l_camera, scaleFactorX,scaleFactorY);
-        SetCameraProtoParameters(rightIntrinsics, r_camera, scaleFactorX,scaleFactorY);
+        SetCameraProtoParameters(leftIntrinsics, l_camera, scaleFactorX,scaleFactorY,true);
+        SetCameraProtoParameters(rightIntrinsics, r_camera, scaleFactorX,scaleFactorY,false);
     }
     else
     {
-        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera, scaleFactorX,scaleFactorY);
-        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera, scaleFactorX,scaleFactorY);
+        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera, scaleFactorX,scaleFactorY,true);
+        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera, scaleFactorX,scaleFactorY,false);
     }
     //Left image
     Image1ub buffer_left_gray(left.rows, left.cols);
