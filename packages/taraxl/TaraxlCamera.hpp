@@ -20,6 +20,10 @@ namespace TaraXLSDK{
     TARAXL_752_480 = 3,
     TARAXL_1600_1300 = 4
   };
+  enum TaraXLFrames{
+    TARAXL_LEFT=1,
+    TARAXL_RIGHT=0
+  };
   enum TaraXLDownscaledResolutions{
     TARAXL_DOWNSCALE_1600_1200 = 0,
     TARAXL_DOWNSCALE_1440_1080 = 1,
@@ -116,7 +120,7 @@ class TaraXLCameraDevice : public alice::Codelet {
 
   void setResolutionCaller(TaraXLSDK::TaraXLNativeResolutions);
 
-  void SetCameraProtoParameters(const TaraXLSDK::CalibrationParams& in, ::ColorCameraProto::Builder& out, double scaleFactorX, double scaleFactorY,bool leftCamera);
+  void SetCameraProtoParameters(const TaraXLSDK::CalibrationParams& in, ::ColorCameraProto::Builder& out,TaraXLSDK::TaraXLFrames frames);
 
 
   void getDownscaledWidthHeight(TaraXLSDK::TaraXLDownscaledResolutions selected_downscaled_resolution,int &downscaledCols,int &downscaledRows);

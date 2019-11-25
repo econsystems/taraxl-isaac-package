@@ -12,32 +12,32 @@ def isaac_taraxl_workspace():
     isaac_new_http_archive(
         name = "taraxl_aarch64_jetpack42",
         build_file = clean_dep("//third_party:taraxl_jetpack42.BUILD"),
-        sha256 = "c04938b86019a7e690c62ab80636d2dc9b21dfdf8f5d0ee7831d0f374250d996",
-        url = "https://www.dropbox.com/s/id734hmyvz2eqy0/taraxl_package.tar.xz?dl=0",
+        sha256 = "a63fad026d5316ad108eeae0922f9e294b47d3584ca6fcde084e72804e151340",
+        url = "https://www.dropbox.com/s/nrot3ytrcu0n3pd/taraxl_package.tar.xz?dl=0",
         type = "tar.xz",
         licenses = [],
     )
     isaac_new_http_archive(
         name = "opencv_dev_aarch64",
         build_file = clean_dep("//third_party:opencv_dev.BUILD"),
-        sha256 = "39a1a5c936b4731b0cfe85e38a5ab93a0f12a4b64ef92f179f1e0ef2e9208207",
-        url = "https://www.dropbox.com/s/6lin695ndfn1kqi/opencv_dev.tar.xz?dl=0",
+        sha256 = "a5d7ec6669c5906020cd5eca0084a9dc2c910b83b97f8959d01617c3b5cb006f",
+        url = "https://www.dropbox.com/s/5vtijglghh5e8f6/opencv_dev.tar.xz?dl=0",
         type = "tar.xz",
         licenses = [],
     )
     isaac_new_http_archive(
         name = "pcl_dev_aarch64",
         build_file = clean_dep("//third_party:pcl_dev.BUILD"),
-        sha256 = "471fe7f8f6bc06424f33bd2abda6d632d9fb6ea4af23ea653ec99a48d9e80d7f",
-        url = "https://www.dropbox.com/s/ct9lh49fof6lpzq/pcl_dev.tar.xz?dl=0",
+        sha256 = "3516f7f467113cd7e574e329ef3f777b108390b714deb44713f1fa8b286775c2",
+        url = "https://www.dropbox.com/s/oyqtc3dl8fbvfzs/pcl_dev.tar.xz?dl=0",
         type = "tar.xz",
         licenses = [],
     )
     isaac_new_http_archive(
         name = "tbb_dev_aarch64",
         build_file = clean_dep("//third_party:tbb_dev.BUILD"),
-        sha256 = "786869e39ce14ab311f6a219902437b68ff218cd3ee15cd519a6e86877587766",
-        url = "https://www.dropbox.com/s/tqvgjtflj294z7x/tbb_dev.tar.xz?dl=0",
+        sha256 = "ec1422f6653723313cc585de254440259f2e92c26bdc9465432726325a483ce6",
+        url = "https://www.dropbox.com/s/uuqeril2i0vixte/tbb_dev.tar.xz?dl=0",
         type = "tar.xz",
         licenses = [],
     )

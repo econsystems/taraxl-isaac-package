@@ -10,10 +10,9 @@
 #include "engine/gems/system/cuda_context.hpp"
 #include "messages/camera.hpp"
 #include "engine/gems/image/processing.hpp"
-
-
 #define TARAXL "See3CAM_StereoA"
 using namespace TaraXLSDK;
+using namespace std;
 #define DEFAULT_RESOLUTION 0
 namespace isaac {
 namespace {
@@ -29,7 +28,7 @@ ImageConstView1ub getIssacMat(const cv::Mat& mat) {
 
 }  // namespace
 // Helper function to copy camera intrinsics to ColorCameraProto
-void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out, double scaleFactorX, double scaleFactorY,bool leftCamera) {
+void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out,TaraXLFrames frames) {
   // Color space
   out.setColorSpace(ColorCameraProto::ColorSpace::GREYSCALE);
 
@@ -37,10 +36,11 @@ void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, :
   auto pinhole = out.initPinhole();
 
   //Multiplying by a scale factor to be flesible to all the resolutions.
-  double fx = in.cameraMatrix.at<double>(0,0) * scaleFactorX;
-  double fy = in.cameraMatrix.at<double>(1,1) * scaleFactorY;
-  double cx = in.cameraMatrix.at<double>(0,2) * scaleFactorX;
-  double cy = in.cameraMatrix.at<double>(1,2) * scaleFactorY;
+  
+  double fx = in.cameraMatrix.at<double>(0,0) ;
+  double fy = in.cameraMatrix.at<double>(1,1) ;
+  double cx = in.cameraMatrix.at<double>(0,2) ;
+  double cy = in.cameraMatrix.at<double>(1,2) ;
 
   ToProto(Vector2d(fx,fy), pinhole.getFocal());
   ToProto(Vector2d(cx,cy), pinhole.getCenter());
@@ -64,7 +64,7 @@ void TaraXLCameraDevice::SetCameraProtoParameters(const CalibrationParams& in, :
 
 
 
-  if(leftCamera)
+  if(frames==TARAXL_LEFT)
   {
 	  show("Intrinsic parameters.Left Camera Parameters.fx", fx);
 	  show("Intrinsic parameters.Left Camera Parameters.fy", fy);
@@ -139,7 +139,7 @@ void TaraXLCameraDevice::setResolutionCaller(TaraXLNativeResolutions nativeResol
         reportFailure("Setting camera resolutions failed. Error code : %d\n", status);
         return;
     }
-
+    downscaledCols=0;
     //Setting resolution in Sight to update native resolution for different cameras.
     set_native_resolution(nativeResolution);
 }
@@ -178,59 +178,88 @@ void TaraXLCameraDevice::start() {
       reportFailure("Getting camera name failed. Error code : %d\n", status);
       return;
   }
+   
 
+ //By default codelet wil be runing in auto exposure for manual pls uncomment the setExposure API
+ //Exposure ranges from 10 to 1000000 for See3CAM_StereoA and 1 to 7500 for STEEReoCAM
+ //status=selectedCam.setExposure(1019);
+   if (status != TARAXL_SUCCESS) {
+
+      reportFailure("Getting setExposure failed. Error code : %d\n", status);
+      return;
+  }
 
   selected_native_resolution = get_native_resolution();
   selected_downscaled_resolution = get_downscaled_resolution();
 
   setResolutionCaller(selected_native_resolution);
 
-  downscaledRows = selectedResolution.height;
-  if(cameraName == TARAXL)
-      downscaledCols = selectedResolution.width;
-  else
-      downscaledCols = selectedResolution.width/2;
 
   tickPeriodically();
 }
 
 void TaraXLCameraDevice::tick() {
 
-    cv::Mat left,right;
+    
+    cv::Mat left,right,left1,right1;
+  
     TARAXL_STATUS_CODE status;
-    std::string str;
-    selectedCam.getFriendlyName(str);
-
 
     //Publish raw frames upon user selection.
-    if(get_publish_raw())
+     if(get_publish_raw())
     {
-        status = selectedCam.getUnrectifiedFrame(left,right);
 
-        if (status != TARAXL_SUCCESS) {
+         
+         if(selected_downscaled_resolution!= get_downscaled_resolution())
+         {
+            selected_downscaled_resolution = get_downscaled_resolution();
+            getDownscaledWidthHeight(selected_downscaled_resolution,downscaledCols,downscaledRows);          
+          }
+        
+         if ( downscaledCols!=0)
+         {
+          status = selectedCam.getUnrectifiedFrame_scale(left,right,downscaledCols,downscaledRows);
+         }
+         else{
+          status = selectedCam.getUnrectifiedFrame(left,right);
+         }
+         if (status != TARAXL_SUCCESS) {
 
-            reportFailure("grabFrame failed. Error code : %d\n", status);
+            reportFailure("getUnrectifiedFrame failed. Error code : %d\n", status);
             return;
         }
     }
     else
     {
-        status = selectedCam.grabFrame(left,right);
-
-        if (status != TARAXL_SUCCESS) {
+        if(selected_downscaled_resolution!= get_downscaled_resolution())
+         {
+            selected_downscaled_resolution = get_downscaled_resolution();
+            getDownscaledWidthHeight(selected_downscaled_resolution,downscaledCols,downscaledRows);
+                   
+          }
+         if ( downscaledCols!=0)
+         {
+          status = selectedCam.grabFrame_scale(left,right,downscaledCols,downscaledRows);
+         }
+       else
+         {   
+          status = selectedCam.grabFrame(left,right);
+         }
+       if (status != TARAXL_SUCCESS) {
 
             reportFailure("grabFrame failed. Error code : %d\n", status);
             return;
-        }
+        }  
     }
-
-
+  
     if(selected_native_resolution != get_native_resolution())
     {
         selected_native_resolution = get_native_resolution();
         setResolutionCaller(selected_native_resolution);
     }
+
     publish(left,right);
+   
 }
 
 void TaraXLCameraDevice::stop() {
@@ -317,8 +346,7 @@ void TaraXLCameraDevice::getDownscaledWidthHeight(TaraXLDownscaledResolutions do
             downscaledRows = 0;
             break;
         default :
-            downscaledCols = 640;
-            downscaledRows = 480;
+            reportFailure("Downscale resolution not supported for the selected camera.\n");
             break;
       }
     }
@@ -395,8 +423,7 @@ void TaraXLCameraDevice::getDownscaledWidthHeight(TaraXLDownscaledResolutions do
             downscaledRows = 0;
             break;
         default :
-            downscaledCols = 640;
-            downscaledRows = 480;
+            reportFailure("Downscale resolution not supported for the selected camera.\n");
             break;
       }
     }
@@ -412,65 +439,31 @@ void TaraXLCameraDevice::publish(cv::Mat left, cv::Mat right) {
     TARAXL_STATUS_CODE status;
 
 
-    if(selected_downscaled_resolution != get_downscaled_resolution())
-    {
-        selected_downscaled_resolution = get_downscaled_resolution();
-        getDownscaledWidthHeight(selected_downscaled_resolution,downscaledCols,downscaledRows);
-    }
-
-    double scaleFactorX,scaleFactorY;
-
-    if(cameraName == TARAXL)
-        scaleFactorX = (double) downscaledCols / (double)(selectedResolution.width);
-    else
-        scaleFactorX = (double)downscaledCols / ((double)selectedResolution.width/2.0);
-    scaleFactorY = (double)downscaledRows / (double)selectedResolution.height;
-
     status = selectedCam.getCalibrationParameters(R,T,leftIntrinsics,rightIntrinsics,leftRectifiedIntrinsics, rightRectifiedIntrinsics);
-
-    //Publishing the intrinsics of raw frame dynamically by getting the state of publish_raw
+ 
     if(get_publish_raw())
     {
-        SetCameraProtoParameters(leftIntrinsics, l_camera, scaleFactorX,scaleFactorY,true);
-        SetCameraProtoParameters(rightIntrinsics, r_camera, scaleFactorX,scaleFactorY,false);
+        SetCameraProtoParameters(leftIntrinsics, l_camera,TARAXL_LEFT);
+        SetCameraProtoParameters(rightIntrinsics, r_camera,TARAXL_RIGHT);
     }
     else
     {
-        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera, scaleFactorX,scaleFactorY,true);
-        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera, scaleFactorX,scaleFactorY,false);
+        SetCameraProtoParameters(leftRectifiedIntrinsics, l_camera,TARAXL_LEFT);
+        SetCameraProtoParameters(rightRectifiedIntrinsics, r_camera,TARAXL_RIGHT);
     }
     //Left image
     Image1ub buffer_left_gray(left.rows, left.cols);
+    
     Copy(getIssacMat (left), buffer_left_gray);
-    if(left.rows > downscaledRows && left.cols > downscaledCols && downscaledCols != 0 && downscaledRows != 0 )
-    {
-        Image1ub buffer_left_gray_scaled;
-        Downsample(buffer_left_gray, Vector2i{downscaledRows, downscaledCols}, buffer_left_gray_scaled);
-        show("left_image_thumbnail",[&](sight::Sop& sop) { sop.add(Reduce<kSightReduceSize>(buffer_left_gray_scaled)); });
-        ToProto(std::move(buffer_left_gray_scaled), l_camera.getImage(), tx_leftImage().buffers());
-    }
-    else
-    {
-        show("left_image_thumbnail",[&](sight::Sop& sop) { sop.add(Reduce<kSightReduceSize>(buffer_left_gray)); });
-        ToProto(std::move(buffer_left_gray), l_camera.getImage(), tx_leftImage().buffers());
-    }
-
+  
+    show("left_image_thumbnail",[&](sight::Sop& sop) { sop.add(Reduce<kSightReduceSize>(buffer_left_gray)); });
+    ToProto(std::move(buffer_left_gray), l_camera.getImage(), tx_leftImage().buffers());
     //Right image
     Image1ub buffer_right_gray(left.rows, left.cols);
     Copy(getIssacMat (right), buffer_right_gray);
-    if(left.rows > downscaledRows && left.cols > downscaledCols && downscaledCols != 0 && downscaledRows != 0)
-    {
-        Image1ub buffer_right_gray_scaled;
-        Downsample(buffer_right_gray, Vector2i{downscaledRows, downscaledCols}, buffer_right_gray_scaled);
-        show("right_image_thumbnail",[&](sight::Sop& sop) { sop.add(Reduce<kSightReduceSize>(buffer_right_gray_scaled)); });
-        ToProto(std::move(buffer_right_gray_scaled), r_camera.getImage(), tx_rightImage().buffers());
-    }
-    else
-    {
-        show("right_image_thumbnail",[&](sight::Sop& sop) { sop.add(Reduce<kSightReduceSize>(buffer_right_gray)); });
-        ToProto(std::move(buffer_right_gray), r_camera.getImage(), tx_rightImage().buffers());
-    }
-
+   
+    show("right_image_thumbnail",[&](sight::Sop& sop) { sop.add(Reduce<kSightReduceSize>(buffer_right_gray)); });
+    ToProto(std::move(buffer_right_gray), r_camera.getImage(), tx_rightImage().buffers());
     const int64_t acqtime = node()->clock()->timestamp();
     tx_leftImage().publish(acqtime);
     tx_rightImage().publish(acqtime);
