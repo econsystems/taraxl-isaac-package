@@ -1,4 +1,4 @@
-# This package contains the aarch64 version of the libopenni library copied from tx2/xavier/nano
+# This package contains the aarch64 version of the pcl library copied from tx2/xavier/nano
 # libpcl
 cc_library(
     name = "pcl_dev_aarch64",

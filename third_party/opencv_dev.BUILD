@@ -1,4 +1,4 @@
-# This package contains the aarch64 version of the libopenni library copied from tx2/xavier/nano
+# This package contains the aarch64 version of the libopencv library copied from tx2/xavier/nano
 # libopencv
 cc_library(
     name = "opencv_dev_aarch64",

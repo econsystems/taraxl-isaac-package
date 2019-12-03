@@ -1,5 +1,4 @@
-
-# TaraXL headers and libs based on v3.1.1
+# TaraXL headers and libs for ISAAC codelet
 
 exports_files(["LICENSE.TXT"])
 
