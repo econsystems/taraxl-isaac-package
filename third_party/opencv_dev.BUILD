@@ -9,6 +9,8 @@ cc_library(
            glob(["opencv_dev/include/opencv2/highgui/*.h*"])+
            glob(["opencv_dev/include/opencv2/imgcodecs/*.h*"])+
            glob(["opencv_dev/include/opencv2/videoio/*.h*"])+
+	   glob(["opencv_dev/include/opencv2/flann/*.h*"])+
+           glob(["opencv_dev/include/opencv2/calib3d/*.h*"])+
            glob(["opencv_dev/include/opencv2/imgproc/**/*.h*"]),
     includes = ["opencv_dev/include"],
 

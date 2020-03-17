@@ -10,7 +10,6 @@ isaac_cc_module(
     copts = ["-std=c++14"],
     deps = [
           "//engine/gems/system:cuda_context",
-          "//third_party:cuda",
-          "//third_party:taraxl",
+	  "//third_party:taraxl",         
     ],
 )

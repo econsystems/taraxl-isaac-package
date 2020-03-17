@@ -1,3 +1,13 @@
+"""
+Copyright (c) 2019, NVIDIA CORPORATION. All rights reserved.
+
+NVIDIA CORPORATION and its licensors retain all intellectual property
+and proprietary rights in and to this software, related documentation
+and any modifications thereto. Any use, reproduction, disclosure or
+distribution of this software and related documentation without an express
+license agreement from NVIDIA CORPORATION is strictly prohibited.
+"""
+
 load("//third_party:cuda.bzl", "cuda_deps")
 
 cuda_deps()
@@ -8,7 +18,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = select({
         "//engine/build:platform_x86_64": ["@tensorrt_x86_64"],
-        "//engine/build:platform_jetpack42": ["@tensorrt_aarch64_jetpack42"],
+        "//engine/build:platform_jetpack43": ["@tensorrt_aarch64_jetpack43"],
     }) + [
         "cublas",
     ],
@@ -20,7 +30,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = select({
         "//engine/build:platform_x86_64": ["@libtensorflow_x86_64"],
-        "//engine/build:platform_jetpack42": ["@libtensorflow_aarch64_jetpack42"],
+        "//engine/build:platform_jetpack43": ["@libtensorflow_aarch64_jetpack43"],
     }) + [
         "//third_party:cublas",
         "//third_party:cudnn",
@@ -36,7 +46,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = select({
         "//engine/build:platform_x86_64": ["@libtorch_x86_64"],
-        "//engine/build:platform_jetpack42": ["@libtorch_aarch64_jetpack42"],
+        "//engine/build:platform_jetpack43": ["@libtorch_aarch64_jetpack42"],
     }) + [
         "//third_party:cublas",
         "//third_party:cuda",
@@ -53,7 +63,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = select({
         "//engine/build:platform_x86_64": ["@isaac_ros_bridge_x86_64"],
-        "//engine/build:platform_jetpack42": ["@isaac_ros_bridge_aarch64_xavier"],
+        "//engine/build:platform_jetpack43": ["@isaac_ros_bridge_aarch64_xavier"],
     }),
 )
 
@@ -62,7 +72,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = select({
         "//engine/build:platform_x86_64": ["@opencv_x86_64"],
-        "//engine/build:platform_jetpack42": ["@opencv_aarch64_jetpack42"],
+        "//engine/build:platform_jetpack43": ["@opencv_aarch64_jetpack42"],
     }),
 )
 
@@ -71,7 +81,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = select({
         "//engine/build:platform_x86_64": [],
-        "//engine/build:platform_jetpack42": ["@libargus_aarch64_nano"],
+        "//engine/build:platform_jetpack43": ["@libargus_aarch64_nano"],
     }),
 )
 
@@ -83,15 +93,16 @@ cc_library(
             "@zed_x86_64",
             "@libpng12_x86_64//:libpng12_x86_64",
         ],
-        "//engine/build:platform_jetpack42": [
+        "//engine/build:platform_jetpack43": [
             "@zed_aarch64_jetpack42",
         ],
     }),
 )
+
 cc_library(
     name = "taraxl",
     visibility = ["//visibility:public"],
     deps = select({
-        "//engine/build:platform_jetpack42": ["@taraxl_aarch64_jetpack42"],
+        "//engine/build:platform_jetpack43": ["@taraxl_aarch64_jetpack43"],
     }),
 )

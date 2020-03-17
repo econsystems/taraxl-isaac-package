@@ -7,13 +7,19 @@ def clean_dep(dep):
 
 # loads dependencies for taraxl
 def isaac_taraxl_workspace():
-
-
     isaac_new_http_archive(
-        name = "taraxl_aarch64_jetpack42",
-        build_file = clean_dep("//third_party:taraxl_jetpack42.BUILD"),
-        sha256 = "660e6c0a745f2dec754d1f72a8247367d058bbe53ca8d4d6fe1b41a44acf021e",
-        url = "https://www.dropbox.com/s/bo5vnm0okpvqxx0/taraxl_package.tar.xz?dl=1",
+        name = "argus_aarch64_jetpack43",
+        build_file = clean_dep("//third_party:argus_jetpack43.BUILD"),
+        sha256 = "a75906b8a8747d75938ac9cb4b02333dff4660f27041fb3c3b49f01df4c7f28d",
+        url = "https://www.dropbox.com/s/tfld2elm7h5w8bi/argus.tar.xz?dl=1",
+        type = "tar.xz",
+        licenses = [],
+    )
+    isaac_new_http_archive(
+        name = "taraxl_aarch64_jetpack43",
+        build_file = clean_dep("//third_party:taraxl_jetpack43.BUILD"),
+        sha256 = "bdc6947853a97b8a200fdac0a69c17ff11aa3d6cbeb8a266d5aa1cf8206de0df",
+        url = "https://www.dropbox.com/s/82ko5v990mj7wmo/taraxl_imuPackage.tar.xz?dl=1",
         type = "tar.xz",
         licenses = [],
     )
@@ -25,29 +31,6 @@ def isaac_taraxl_workspace():
         type = "tar.xz",
         licenses = [],
     )
-    isaac_new_http_archive(
-        name = "pcl_dev_aarch64",
-        build_file = clean_dep("//third_party:pcl_dev.BUILD"),
-        sha256 = "3516f7f467113cd7e574e329ef3f777b108390b714deb44713f1fa8b286775c2",
-        url = "https://www.dropbox.com/s/oyqtc3dl8fbvfzs/pcl_dev.tar.xz?dl=1",
-        type = "tar.xz",
-        licenses = [],
-    )
-    isaac_new_http_archive(
-        name = "tbb_dev_aarch64",
-        build_file = clean_dep("//third_party:tbb_dev.BUILD"),
-        sha256 = "ec1422f6653723313cc585de254440259f2e92c26bdc9465432726325a483ce6",
-        url = "https://www.dropbox.com/s/uuqeril2i0vixte/tbb_dev.tar.xz?dl=1",
-        type = "tar.xz",
-        licenses = [],
-    )
-    isaac_new_http_archive(
-        name = "openni_dev_aarch64",
-        build_file = clean_dep("//third_party:openni_dev.BUILD"),
-        sha256 = "e1ae942f98366cebbb1f80d131adf1e977f127fc9c7cdd61f01ec39fa1072ae2",
-        url = "https://www.dropbox.com/s/wbmcqf9l03tay78/openni_dev.tar.xz?dl=1",
-        type = "tar.xz",
-        licenses = [],
-
-    )
+    
+    
     

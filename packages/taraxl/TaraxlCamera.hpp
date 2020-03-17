@@ -1,86 +1,89 @@
 #pragma once
 
 #include <memory>
-#include <string>
-
 #include "engine/alice/alice_codelet.hpp"
 #include "engine/core/image/image.hpp"
 #include "messages/messages.hpp"
 #include "engine/gems/geometry/pinhole.hpp"
 
-#include "TaraXL.h"
-#include "TaraXLCam.h"
-#include "TaraXLEnums.h"
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include <sys/types.h>
+
+#include "CUDAHelper.h"
+#include <Argus/Argus.h>
+#include "CameraModuleEGL.h"
+#include <EGLStream/EGLStream.h>
+#include <Argus/CameraProvider.h>
+
+#include "CudaDOLDenoiseKernel.h"
+#include "CameraModuleEGL.h"
+#include "ArgusMetaEvent.h"
+#include "CudaDOLDenoiseConsumer.h"
+#include "ControlSettings.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <cuda_runtime_api.h>
+#include <cuda.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include "opencv2/cudawarping.hpp"
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <stdint.h>
+#include <sys/ioctl.h> 
+#include <linux/videodev2.h>
 
 
 namespace TaraXLSDK{
   enum TaraXLNativeResolutions{
-    TARAXL_640_480 = 1,
-    TARAXL_320_240 = 2,
-    TARAXL_752_480 = 3,
-    TARAXL_1600_1300 = 4
+      TARAXL_1600 = 1600,
+      TARAXL_1300 =1300,
+      TARAXL_768 = 768,
+      TARAXL_576 = 576,
+      TARAXL_640 = 640,
+      TARAXL_480 = 480,
+      TARAXL_320 = 320,
+      TARAXL_240 = 240
   };
   enum TaraXLFrames{
     TARAXL_LEFT=1,
     TARAXL_RIGHT=0
   };
-  enum TaraXLDownscaledResolutions{
-    TARAXL_DOWNSCALE_1600_1200 = 0,
-    TARAXL_DOWNSCALE_1440_1080 = 1,
-    TARAXL_DOWNSCALE_1400_1050 = 2,
-    TARAXL_DOWNSCALE_1280_960 = 3,
-    TARAXL_DOWNSCALE_1200_900 = 4,
-    TARAXL_DOWNSCALE_1152_864 = 5,
-    TARAXL_DOWNSCALE_1024_768 = 6,
-    TARAXL_DOWNSCALE_960_720 = 7,
-    TARAXL_DOWNSCALE_800_600 = 8,
-    TARAXL_DOWNSCALE_768_576 = 9,
-    TARAXL_DOWNSCALE_640_480 = 10,
-    TARAXL_DOWNSCALE_480_360 = 11,
-    TARAXL_DOWNSCALE_320_240 = 12,
-    TARAXL_DOWNSCALE_192_144 = 13,
-    TARAXL_DOWNSCALE_160_120 = 14,
-    TARAXL_DOWNSCALE_NAN = 15
+ 
+  enum TaraXLDenoise {
+    OFF = 0,
+    FAST = 1,
+    HIGH = 2
   };
-  NLOHMANN_JSON_SERIALIZE_ENUM(TARAXL_IMU_OUTPUT_FREQUENCY, {
-      {IMU_12_5_HZ, "13Hz"},
-      {IMU_26_HZ, "26Hz"},
-      {IMU_52_HZ, "52Hz"},
-      {IMU_104_HZ, "104Hz"},
-      {IMU_208_HZ, "208Hz"},
-      {IMU_416_HZ, "416Hz"},
-      {IMU_833_HZ, "833Hz"},
-      {IMU_208_HZ, nullptr},
-  });
-  NLOHMANN_JSON_SERIALIZE_ENUM(TaraXLNativeResolutions, {
-      {TARAXL_1600_1300, "1600x1300"},
-      {TARAXL_752_480, "752x480"},
-      {TARAXL_640_480, "640x480"},
-      {TARAXL_320_240, "320x240"},
-      {TARAXL_1600_1300, nullptr},
-  });
-  NLOHMANN_JSON_SERIALIZE_ENUM(TaraXLDownscaledResolutions, {
-      {TARAXL_DOWNSCALE_1600_1200, "1600x1200"},
-      {TARAXL_DOWNSCALE_1440_1080, "1440x1080"},
-      {TARAXL_DOWNSCALE_1400_1050, "1400x1050"},
-      {TARAXL_DOWNSCALE_1280_960, "1280x960"},
-      {TARAXL_DOWNSCALE_1200_900, "1200x900"},
-      {TARAXL_DOWNSCALE_1152_864, "1152x864"},
-      {TARAXL_DOWNSCALE_1024_768, "1024x720"},
-      {TARAXL_DOWNSCALE_960_720, "960x720"},
-      {TARAXL_DOWNSCALE_800_600, "800x600"},
-      {TARAXL_DOWNSCALE_768_576, "768x576"},
-      {TARAXL_DOWNSCALE_640_480, "640x480"},
-      {TARAXL_DOWNSCALE_480_360, "480x360"},
-      {TARAXL_DOWNSCALE_320_240, "320x240"},
-      {TARAXL_DOWNSCALE_192_144, "192x144"},
-      {TARAXL_DOWNSCALE_160_120, "160x120"},
-      {TARAXL_DOWNSCALE_NAN, ""},
-      {TARAXL_DOWNSCALE_640_480, nullptr}
-  });
 
+  NLOHMANN_JSON_SERIALIZE_ENUM(TaraXLNativeResolutions, {
+      {TARAXL_1600, "1600"},
+      {TARAXL_1300, "1300"},
+      {TARAXL_768, "768"},
+      {TARAXL_576, "576"},
+      {TARAXL_640, "640"},
+      {TARAXL_480, "480"},
+      {TARAXL_320, "320"},
+      {TARAXL_240, "240"},
+      {TARAXL_1600, nullptr},
+  });
 }
 
+extern uint32_t	g_deviceID;
+extern bool g_streamState;
+extern bool g_controlState;
+extern bool g_captureState;
+extern bool g_burstCapture;
+extern bool g_controlState;
+extern bool g_executeCommand;
 
 namespace isaac {
 
@@ -99,43 +102,85 @@ class TaraXLCameraDevice : public alice::Codelet {
   ISAAC_PROTO_TX(Pose3dProto, extrinsics);
 
 
-
-  ISAAC_PARAM(TaraXLSDK::TaraXLNativeResolutions, native_resolution, TaraXLSDK::TARAXL_752_480);
-
-  ISAAC_PARAM(TaraXLSDK::TaraXLDownscaledResolutions, downscaled_resolution, TaraXLSDK::TARAXL_DOWNSCALE_NAN);
+  ISAAC_PARAM(int, resolution_width, TaraXLSDK::TARAXL_1600);
+  ISAAC_PARAM(int, resolution_height, TaraXLSDK::TARAXL_1300);
 
   // The numeral of the system video device of the TaraXL camera. For example for /dev/video0 choose 0.
   ISAAC_PARAM(int, device_id, 0);
 
   //To allow codelet to publish raw/rectified frames.
-  ISAAC_PARAM(bool, publish_raw, false);
+  ISAAC_PARAM(bool, publish_raw, true);
+
+  //To allow codelet default settings
+  ISAAC_PARAM(bool, auto_exposure, true);
+  ISAAC_PARAM(int, denoise_mode, TaraXLSDK::FAST);
+  ISAAC_PARAM(float, denoise_strength, 1.0);
+  ISAAC_PARAM(int, edgeenhance_mode, TaraXLSDK::FAST);
+  ISAAC_PARAM(float, edgeenhance_strength, -1.0);
+  ISAAC_PARAM(int, exposure_min_time, 10000);
+  ISAAC_PARAM(int, exposure_max_time, 66666000);
+  ISAAC_PARAM(float, sensor_min_gain, 1.12202);
+  ISAAC_PARAM(float, sensor_max_gain, 5.0);
+
+
+  void acquireFrame();
 
  private:
+  typedef struct _tara_calibdata {
+	__u16 index;
+	__u16 size;
+	char data[512];
+  }TARA_CALIBDATA;
+  struct CalibrationParams
+  {
+      cv::Mat cameraMatrix;	
+      cv::Mat distortionMatrix;
+  };
 
   // Publish the stereo data (images, camera intrinsics and extrinsics)
   void publish(cv::Mat left, cv::Mat right);
 
   // Retrieve the camera extrinsics
   Pose3d getCameraExtrinsics(cv::Mat rotation,cv::Mat translation);
+  void SetCameraProtoParameters(const CalibrationParams& in, ::ColorCameraProto::Builder& out,TaraXLSDK::TaraXLFrames frames);
+  int readCalibrationParams(int width,int height);
 
-  void setResolutionCaller(TaraXLSDK::TaraXLNativeResolutions);
+  void startCamera();
+  void shutdownCamera();
 
-  void SetCameraProtoParameters(const TaraXLSDK::CalibrationParams& in, ::ColorCameraProto::Builder& out,TaraXLSDK::TaraXLFrames frames);
+
+  Argus::UniqueObj<Argus::CameraProvider>  g_cameraProvider;
+
+  std::vector<CameraDevice*> g_cameraDevices;
+  std::vector<ArgusSamples::CameraModulesEGL*> camerProducerList;
+  std::vector<SensorMode*> sensorModes;
+
+  uint32_t streamCount;
+  static const uint32_t MAX_CAMERA_NUM = 6;
+  const uint32_t DEFAULT_SENSOR_MODE   = 0;
+  const uint32_t DEFAULT_MIN_CAMERAS   = 1;
+
+  UniqueObj<ArgusSamples::CameraModulesEGL> cameraProducer[6];
+  UniqueObj<Argus::CaptureSession> captureSession[6];
+  UniqueObj<ArgusSamples::ControlSettings> controlSettings[6];
 
 
-  void getDownscaledWidthHeight(TaraXLSDK::TaraXLDownscaledResolutions selected_downscaled_resolution,int &downscaledCols,int &downscaledRows);
-  // TaraXL camera data
-  TaraXLSDK::TaraXL taraxlCameras;
-  TaraXLSDK::TaraXLCam selectedCam;
-  TaraXLSDK::ResolutionList supportedResolutions;
-  TaraXLSDK::Resolution selectedResolution;
-  TaraXLSDK::TaraXLCamList taraxlCamList;
-  std::string cameraName;
-  cv::Mat leftImage;
-  cv::Mat rightImage;
-  TaraXLSDK::TaraXLNativeResolutions selected_native_resolution;
-  TaraXLSDK::TaraXLDownscaledResolutions selected_downscaled_resolution;
-  int downscaledRows, downscaledCols;
+  ArgusSamples::CudaDOLDenoiseConsumer *cudaConsumer;
+  bool runOnce, queryFrame;
+
+  cv::Mat cpuFrame;
+  cv::cuda::GpuMat gpuFrame;
+  cv::Mat rotationMatrix, translationMatrix;
+  cv::Mat leftCameraMatrix, leftDistortionMatrix, rightCameraMatrix, rightDistortionMatrix,leftRectifiedCameraMatrix,rightRectifiedCameraMatrix;
+  cv::cuda::GpuMat m_gpuMap11, m_gpuMap21, m_gpuMap12, m_gpuMap22;
+   std::thread context;
+   std::mutex mtx;
+ 
+  int oldWidth, oldHeight, oldAutoExposure;
+  int oldDenoiseMode, oldEdgeenhance_mode;
+  int oldExposureMinTime, oldExposureMaxTime;
+  float oldDenoiseStrength, oldEdgeenhance_strength;
+  float oldSensorMinGain, oldSensorMaxGain;
 };
 
 }  // namespace isaac

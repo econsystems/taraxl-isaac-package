@@ -64,7 +64,7 @@ cartographer_repositories()
 # due to bazel bug: https://github.com/bazelbuild/bazel/issues/1550
 isaac_git_repository(
     name = "com_github_nelhage_rules_boost",
-    commit = "bd05f7b51d25396f30639d31fa78b55a3c1db182",
+    commit = "82ae1790cef07f3fd618592ad227fe2d66fe0b31",
     licenses = ["@com_github_nelhage_rules_boost//:LICENSE"],
     remote = "https://github.com/nelhage/rules_boost.git",
 )
