@@ -2,7 +2,7 @@
   STEEReoCAM is a 2 MP 3D MIPI Stereo camera for NVIDIA® Jetson AGX
   Xavier/TX2/Nano development kit which supports 2 MP ((2*1600) x 1300) at 30
   fps. This MIPI Stereo camera is based on 1/2.9" OV2311 global shutter CMOS sensor
-  from OmniVision. The front view of STEEReoCAM is shown below.
+  from OmniVision.
   
 ## Prerequisites
 - Jetpack 4.3
